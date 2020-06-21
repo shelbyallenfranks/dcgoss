@@ -1,0 +1,7 @@
+.goss/
+__pycache__/
+*.pyc
+docker-compose.yaml
+goss.yaml
+goss_vars.yaml
+goss_wait.yaml
