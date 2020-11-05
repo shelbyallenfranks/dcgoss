@@ -131,10 +131,10 @@ class DockerCompose(object):
             raise RuntimeError('docker-compose restart failed with exit code: {}'.format(exit_code))
 
     def exec(self, service, *args):
-        return self._execute_cmd('exec', service, *args)
+        return self._execute_cmd('exec', '-T', service, *args)
 
     def exec_pipe(self, service, *args):
-        return self._execute_cmd_pipe('exec', service, *args)
+        return self._execute_cmd_pipe('exec', '-T', service, *args)
 
     def log(self, service=None):
         if service:
