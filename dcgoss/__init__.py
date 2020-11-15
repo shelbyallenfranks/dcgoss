@@ -19,9 +19,9 @@ from .docker_compose import DockerCompose
 __version__ = '0.1.1'
 
 
-def run(path, service, retry_timeout=300, retry_interval=1):
+def run(path, service, retry_timeout=300, retry_interval=0.2):
     return DCGoss(path, Docker(), DockerCompose(path), retry_timeout, retry_interval).run(service)
 
 
-def edit(path, service, retry_timeout=300, retry_interval=1):
+def edit(path, service, retry_timeout=300, retry_interval=0.2):
     return DCGoss(path, Docker(), DockerCompose(path), retry_timeout, retry_interval).edit(service)
