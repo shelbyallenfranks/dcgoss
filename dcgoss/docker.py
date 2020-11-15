@@ -11,15 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import logging
 import os
-import subprocess
 
 from shutil import which
 
+from dcgoss.external_command import ExternalCommand
 
-class Docker(object):
+
+class Docker(ExternalCommand):
     def __init__(self):
         self.binary = which('docker')
 
@@ -30,21 +29,6 @@ class Docker(object):
         # Validate that the docker binary is executable
         if not os.access(self.binary, os.X_OK):
             raise PermissionError('docker binary is not executable')
-
-    def _execute_cmd(self, *args):
-        # Prepare the command to execute
-        cmd = list(args)
-
-        # Prepend the path to the binary
-        cmd.insert(0, self.binary)
-
-        # Execute the command
-        logging.debug('Executing command: {}'.format(cmd))
-        process = subprocess.Popen(cmd)
-        process.communicate()
-
-        # Return the process exit code
-        return process.returncode
 
     def cp(self, source, target):
         exit_code = self._execute_cmd('cp', source, target)

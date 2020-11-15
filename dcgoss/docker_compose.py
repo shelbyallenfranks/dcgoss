@@ -12,15 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 import os
-import subprocess
-import sys
 
 from shutil import which
 
+from dcgoss.external_command import ExternalCommand
 
-class DockerCompose(object):
+
+class DockerCompose(ExternalCommand):
     def __init__(self, path):
         self.path = path
         self.file = '{}/docker-compose.yaml'.format(self.path)
@@ -39,10 +38,7 @@ class DockerCompose(object):
             raise FileNotFoundError('docker-compose.yaml not present in {}'.format(self.path))
 
     def prepare_cmd(self, *args):
-        cmd = list(args)
-
-        # Prepend the path to the binary
-        cmd.insert(0, self.binary)
+        cmd = super().prepare_cmd(*args)
 
         # Prepend the name to use for the docker-compose project
         cmd.insert(1, '--project-name')
@@ -61,32 +57,6 @@ class DockerCompose(object):
             cmd.insert(7, '--no-ansi')
 
         return cmd
-
-    def _execute_cmd_pipe(self, *args):
-        # Prepare the command to execute
-        cmd = self.prepare_cmd(*args)
-
-        # Execute the command and capture any stdout or stderr output
-        logging.debug('Executing command: {}'.format(cmd))
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout = process.stdout.read().decode(sys.getdefaultencoding())
-        stderr = process.stderr.read().decode(sys.getdefaultencoding())
-        process.communicate()
-
-        # Return the process exit code, stdout and stderr output
-        return process.returncode, stdout, stderr
-
-    def _execute_cmd(self, *args):
-        # Prepare the command to execute
-        cmd = self.prepare_cmd(*args)
-
-        # Execute the command
-        logging.debug('Executing command: {}'.format(cmd))
-        process = subprocess.Popen(cmd)
-        process.communicate()
-
-        # Return the process exit code
-        return process.returncode
 
     def up(self, service=None):
         if service:
