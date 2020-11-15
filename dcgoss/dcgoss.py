@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import dateutil.parser
 import logging
 import os
 import stat
@@ -61,10 +62,13 @@ class DCGoss(object):
         self.compose = docker_compose
 
         # Resolve the final retry timeout value
-        self.retry_timeout = self._get_envvar('GOSS_RETRY_TIMEOUT', retry_timeout)
+        self.retry_timeout = float(self._get_envvar('GOSS_RETRY_TIMEOUT', retry_timeout))
 
         # Resolve the final retry interval value
         self.retry_interval = float(self._get_envvar('GOSS_SLEEP', retry_interval))
+
+        # Resolve the final initial startup delay value
+        self.initial_startup = float(self._get_envvar('GOSS_INITIAL_STARTUP', 5))
 
         # Resolve the final path to the goss binary
         self.goss_bin = self._get_envvar('GOSS_PATH', which('goss'))
@@ -116,17 +120,64 @@ class DCGoss(object):
 
         # Wait until the service is running
         logging.info('Waiting for "{}" service container to start successfully...'.format(service))
-        while not self.compose.is_running(service):
+        while True:
             # Validate that the timeout has not been exceeded
             if (time() - self.start_time) > self.retry_timeout:
                 raise TimeoutError('Timeout reached while waiting for initial container startup')
 
-            # Wait some time before checking again
-            sleep(self.retry_interval)
+            # Validate that the service is up
+            if not self._is_service_up(service):
+                sleep(1)
+                continue
+
+            # Query the container start time
+            started1 = self._get_start_time(service)
+
+            # Wait some time to ensure the container remains up for an acceptable period of time
+            sleep(self.initial_startup)
+
+            # Query the container start time again
+            started2 = self._get_start_time(service)
+
+            # Validate that the container has not restarted
+            if started1 == started2:
+                sleep(1)
+                if self._is_service_up(service):
+                    break
 
         # Copy the goss binary and configs into the container
         logging.info('Copying goss binary and configuration into container...')
         self._copy_in(self.compose.get_container_id(service))
+
+    def _is_service_up(self, service):
+        # Query the container ID for the service
+        container_id = self.compose.get_container_id(service)
+
+        # Query the current container state
+        container = self.docker.inspect(container_id) if container_id else {}
+        state = container['State'] if 'State' in container else {}
+
+        # Validate that the container is running
+        if 'Running' in state and not state['Running']:
+            return False
+
+        # Validate that the container is not restarting
+        if 'Restarting' in state and state['Restarting']:
+            return False
+
+        # Return true when all of the above checks have passed
+        return True
+
+    def _get_start_time(self, service):
+        # Query the container ID for the service
+        container_id = self.compose.get_container_id(service)
+
+        # Query the current container state
+        container = self.docker.inspect(container_id) if container_id else {}
+        state = container['State'] if 'State' in container else {}
+
+        # Return the start time for the container
+        return dateutil.parser.isoparse(state['StartedAt']) if 'StartedAt' in state else None
 
     def _copy_in(self, container_id):
         temp_dir = mkdtemp()
@@ -287,7 +338,7 @@ class DCGoss(object):
             sleep(self.retry_interval)
 
             # Ensure the container is still up and running
-            if not self.compose.is_running(service):
+            if not self._is_service_up(service):
                 self.compose.restart(service)
 
     def run(self, service):

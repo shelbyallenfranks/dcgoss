@@ -21,6 +21,9 @@ setup(
         'Topic :: Software Development :: Testing'
     ],
     python_requires='>=3.6',
+    install_requires=[
+        'python-dateutil'
+    ],
     packages=['dcgoss'],
     entry_points={
         'console_scripts': [
