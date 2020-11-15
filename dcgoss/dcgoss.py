@@ -114,15 +114,8 @@ class DCGoss(object):
         logging.info('Starting "{}" service and any dependencies...'.format(service))
         self.compose.up(service)
 
-        # Query the container ID for the service
-        container_id = self.compose.get_container_id(service)
-
-        # Copy the goss binary and configs into the container
-        logging.info('Copying goss binary and configuration into container...')
-        self._copy_in(container_id)
-
         # Wait until the service is running
-        logging.info('Waiting for "{}" service container ({}) to start...'.format(service, container_id[0:12]))
+        logging.info('Waiting for "{}" service container to start successfully...'.format(service))
         while not self.compose.is_running(service):
             # Validate that the timeout has not been exceeded
             if (time() - self.start_time) > self.retry_timeout:
@@ -130,6 +123,10 @@ class DCGoss(object):
 
             # Wait some time before checking again
             sleep(self.retry_interval)
+
+        # Copy the goss binary and configs into the container
+        logging.info('Copying goss binary and configuration into container...')
+        self._copy_in(self.compose.get_container_id(service))
 
     def _copy_in(self, container_id):
         temp_dir = mkdtemp()
