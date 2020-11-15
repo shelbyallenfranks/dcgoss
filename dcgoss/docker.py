@@ -11,8 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import os
 
+from json import loads
 from shutil import which
 
 from dcgoss.external_command import ExternalCommand
@@ -35,3 +37,13 @@ class Docker(ExternalCommand):
 
         if exit_code > 0:
             raise RuntimeError('docker cp failed with exit code: {}'.format(exit_code))
+
+    def inspect(self, target):
+        cmd = self._execute_cmd_pipe('inspect', target)
+
+        try:
+            # Parse the JSON data received
+            result = loads(cmd[1])
+            return result[0] if result else {}
+        except ValueError:
+            return {}
