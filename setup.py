@@ -22,7 +22,7 @@ setup(
     ],
     python_requires='>=3.6',
     install_requires=[
-        'python-dateutil'
+        'python-dateutil~=2.8.0'
     ],
     packages=['dcgoss'],
     entry_points={
