@@ -16,7 +16,7 @@ from .dcgoss import DCGoss
 from .docker import Docker
 from .docker_compose import DockerCompose
 
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 
 
 def run(path, service, retry_timeout=300, retry_interval=0.2):
