@@ -25,13 +25,19 @@ def main():
     parser.add_argument('service', type=str, help='docker-compose service name')
     parser.add_argument('path', type=str, nargs='?', default=os.getcwd(), help='docker-compose project path')
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + dcgoss.__version__)
+    parser.add_argument('-t', '--retry-timeout', type=float, default=300,
+                        help='time in seconds to make retry attempts before timing out '
+                             '(equivalent to setting $GOSS_RETRY_TIMEOUT)')
+    parser.add_argument('-i', '--retry-interval', type=float, default=0.2,
+                        help='time in seconds to wait between retry attempts '
+                             '(equivalent to setting $GOSS_SLEEP)')
 
     # Parse the arguments
     args = parser.parse_args()
 
     try:
         # Execute the requested action
-        return getattr(dcgoss, args.action)(args.path, args.service)
+        return getattr(dcgoss, args.action)(args.path, args.service, args.retry_timeout, args.retry_interval)
 
     except FileNotFoundError as e:
         logging.error(e)
