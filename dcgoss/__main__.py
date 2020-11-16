@@ -24,6 +24,7 @@ def main():
     parser.add_argument('action', type=str, choices=['run', 'edit'], help='action to execute')
     parser.add_argument('service', type=str, help='docker-compose service name')
     parser.add_argument('path', type=str, nargs='?', default=os.getcwd(), help='docker-compose project path')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + dcgoss.__version__)
 
     # Parse the arguments
     args = parser.parse_args()
