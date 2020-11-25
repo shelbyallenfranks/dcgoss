@@ -24,6 +24,9 @@ setup(
     install_requires=[
         'python-dateutil~=2.8.0'
     ],
+    extras_require={
+        ':sys_platform == "win32"': ['colorama>=0.4,<1.0']
+    },
     packages=['dcgoss'],
     entry_points={
         'console_scripts': [

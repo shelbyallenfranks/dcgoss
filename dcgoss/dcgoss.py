@@ -15,6 +15,7 @@
 import dateutil.parser
 import logging
 import os
+import platform
 import stat
 import subprocess
 import sys
@@ -35,6 +36,11 @@ class DCGossLogFormat(logging.Formatter):
         else:
             return '{}{}\033[0m: {}'.format(self.LEVELS[record.levelno], record.levelname, record.msg)
 
+
+# Initialize colorama for Windows only
+if platform.system() == 'Windows':
+    import colorama
+    colorama.init()
 
 # Fetch the root logger
 root = logging.getLogger()
