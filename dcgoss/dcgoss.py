@@ -187,19 +187,23 @@ class DCGoss(object):
 
     def _copy_in(self, container_id):
         temp_dir = mkdtemp()
-        logging.debug('Created temporary directory: {}'.format(temp_dir))
+        logging.debug('Created temp directory: {}'.format(temp_dir))
 
         try:
             # Copy in the goss binary and configuration
+            logging.debug('Copying goss binary to temp directory: {}'.format(self.goss_bin))
             copy(self.goss_bin, '{}/goss'.format(temp_dir))
+            logging.debug('Copying goss config to temp directory: {}'.format(self.goss_file))
             copy(self.goss_file, '{}/goss.yaml'.format(temp_dir))
 
             # Copy in the goss variables file when present
             if os.path.isfile(self.goss_vars):
+                logging.debug('Copying goss variables file to temp directory: {}'.format(self.goss_vars))
                 copy(self.goss_vars, '{}/goss_vars.yaml'.format(temp_dir))
 
             # Copy in the goss wait file when present
             if os.path.isfile(self.goss_wait):
+                logging.debug('Copying goss wait file to temp directory: {}'.format(self.goss_wait))
                 copy(self.goss_wait, '{}/goss_wait.yaml'.format(temp_dir))
 
             # Define the file permissions we will apply
@@ -207,20 +211,25 @@ class DCGoss(object):
             all_read_write = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH
 
             # Ensure the directory is readable and executable
+            logging.debug('Setting permissions on temp directory: {}'.format(oct(all_read_exec | all_read_write)))
             os.chmod(temp_dir, all_read_exec | all_read_write)
 
             # Ensure the binary is readable and executable
+            logging.debug('Setting permissions on goss binary: {}'.format(oct(all_read_exec | all_read_write)))
             os.chmod('{}/goss'.format(temp_dir), all_read_exec | all_read_write)
 
             # Ensure the configuration file is readable and writable
+            logging.debug('Setting permissions on goss config: {}'.format(oct(all_read_write)))
             os.chmod('{}/goss.yaml'.format(temp_dir), all_read_write)
 
             # Ensure the variables file is readable and writable
             if os.path.isfile(self.goss_vars):
+                logging.debug('Setting permissions on goss variables file: {}'.format(oct(all_read_write)))
                 os.chmod('{}/goss_vars.yaml'.format(temp_dir), all_read_write)
 
             # Ensure the wait file is readable and writable
             if os.path.isfile(self.goss_wait):
+                logging.debug('Setting permissions on goss wait file: {}'.format(oct(all_read_write)))
                 os.chmod('{}/goss_wait.yaml'.format(temp_dir), all_read_write)
 
             # Copy the temp directory into the container
@@ -228,42 +237,52 @@ class DCGoss(object):
 
         finally:
             # Clean up all temporary files
-            logging.debug('Removing temporary directory: {}'.format(temp_dir))
+            logging.debug('Removing temp directory: {}'.format(temp_dir))
             rmtree(temp_dir)
 
     def _copy_out(self, container_id):
         temp_dir = mkdtemp()
-        logging.debug('Created temporary directory: {}'.format(temp_dir))
+        logging.debug('Created temp directory: {}'.format(temp_dir))
 
         try:
-            # Copy the files from the container into the temporary directory
+            # Copy the files from the container into the temp directory
+            logging.debug('Copying /goss directory from container ({}) into temp directory: {}'.format(container_id, temp_dir))
             self.docker.cp('{}:/goss'.format(container_id), temp_dir)
 
             # Restore the correct permissions for the goss file
-            os.chmod('{}/goss/goss.yaml'.format(temp_dir), os.stat(self.goss_file).st_mode)
+            mode = os.stat(self.goss_file).st_mode
+            logging.debug('Restoring correct permissions on goss config: {}'.format(oct(mode)))
+            os.chmod('{}/goss/goss.yaml'.format(temp_dir), mode)
 
             # Restore the correct permissions for the variables file
             if os.path.isfile(self.goss_vars):
-                os.chmod('{}/goss/goss_vars.yaml'.format(temp_dir), os.stat(self.goss_vars).st_mode)
+                mode = os.stat(self.goss_vars).st_mode
+                logging.debug('Restoring correct permissions on goss variables file: {}'.format(oct(mode)))
+                os.chmod('{}/goss/goss_vars.yaml'.format(temp_dir), mode)
 
             # Restore the correct permissions for the wait file
             if os.path.isfile(self.goss_wait):
-                os.chmod('{}/goss/goss_wait.yaml'.format(temp_dir), os.stat(self.goss_wait).st_mode)
+                mode = os.stat(self.goss_wait).st_mode
+                logging.debug('Restoring correct permissions on goss wait file: {}'.format(oct(mode)))
+                os.chmod('{}/goss/goss_wait.yaml'.format(temp_dir), mode)
 
             # Copy the goss file into place
+            logging.debug('Copying goss config back to its original location: {}'.format(self.goss_file))
             copy('{}/goss/goss.yaml'.format(temp_dir), self.goss_file)
 
             # Copy the variables file into place
             if os.path.isfile(self.goss_vars):
+                logging.debug('Copying goss variables file back to its original location: {}'.format(self.goss_vars))
                 copy('{}/goss/goss_vars.yaml'.format(temp_dir), self.goss_vars)
 
             # Copy the wait file into place
             if os.path.isfile(self.goss_wait):
+                logging.debug('Copying goss wait file back to its original location: {}'.format(self.goss_wait))
                 copy('{}/goss/goss_wait.yaml'.format(temp_dir), self.goss_wait)
 
         finally:
             # Clean up all temporary files
-            logging.debug('Removing temporary directory: {}'.format(temp_dir))
+            logging.debug('Removing temp directory: {}'.format(temp_dir))
             rmtree(temp_dir)
 
     def _shutdown(self):
