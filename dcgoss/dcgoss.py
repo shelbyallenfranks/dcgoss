@@ -204,7 +204,7 @@ class DCGoss(object):
             os.chmod(temp_dir, all_read_exec | all_read_write)
 
             # Ensure the binary is readable and executable
-            os.chmod('{}/goss'.format(temp_dir), all_read_exec)
+            os.chmod('{}/goss'.format(temp_dir), all_read_exec | all_read_write)
 
             # Ensure the configuration file is readable and writable
             os.chmod('{}/goss.yaml'.format(temp_dir), all_read_write)
